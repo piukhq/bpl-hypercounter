@@ -1,16 +1,13 @@
-from pydantic import BaseSettings
-import psycopg2
-from datetime import datetime, timedelta
-
-import falcon
 import argparse
+import socket
+from datetime import datetime, timedelta
 from wsgiref.simple_server import make_server
 
-import socket
-
+import falcon
+import psycopg2
 import redis
-
 import requests
+from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
