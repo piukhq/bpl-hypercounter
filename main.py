@@ -6,12 +6,17 @@ import falcon
 import argparse
 from wsgiref.simple_server import make_server
 
+import socket
+
+import redis
+
 import requests
 
 
 class Settings(BaseSettings):
     postgres_uri_polaris: str
     postgres_uri_vela: str
+    redis_url: str
 
 
 settings = Settings()
@@ -118,6 +123,26 @@ def teams_notification():
     return requests.post(webhook_url, json=json)
 
 
+def is_leader():
+    r = redis.Redis.from_url(settings.redis_url)
+    lock_key = "bpl-hypercounter"
+    hostname = socket.gethostname()
+    is_leader = False
+
+    with r.pipeline() as pipe:
+        try:
+            pipe.watch(lock_key)
+            leader_host = pipe.get(lock_key)
+            if leader_host in (hostname.encode(), None):
+                pipe.multi()
+                pipe.setex(lock_key, 60, hostname)
+                pipe.execute()
+                is_leader = True
+        except redis.WatchError:
+            pass
+    return is_leader
+
+
 class Home:
     def on_get(self, req, resp):
         print(req.query_string)
@@ -206,4 +231,5 @@ if __name__ == "__main__":
         print(f"Total Users: {get_all_asos_users_since_27th()}")
         print(f"Total Transactions: {get_all_asos_transactions_since_27th()}")
     if args.teams:
-        teams_notification()
+        if is_leader():
+            teams_notification()
