@@ -3,6 +3,7 @@ import socket
 from datetime import datetime, timedelta
 from wsgiref.simple_server import make_server
 
+import arrow
 import falcon
 import psycopg2
 import redis
@@ -80,6 +81,7 @@ def get_all_asos_transactions_since_27th():
 
 
 def teams_notification():
+    yesterday = arrow.now().shift(days=-1).format("dddd, Do MMMM")
     webhook_url = "https://hellobink.webhook.office.com/webhookb2/66f08760-f657-42af-bf88-4f7e4c009af1@a6e2367a-92ea-4e5a-b565-723830bcc095/IncomingWebhook/928e4fefbd904522851850dba09008be/48aca6b1-4d56-4a15-bc92-8aa9d97300df"  # noqa
     json = {
         "@type": "MessageCard",
@@ -88,7 +90,7 @@ def teams_notification():
         "summary": "ASOS User Stats",
         "Sections": [
             {
-                "activityTitle": "BPL ASOS Accounts since yesterday",
+                "activityTitle": f"BPL ASOS stats for yesterday ({yesterday})",
                 "facts": [
                     {"name": "New Users", "value": get_yesterdays_asos_users()},
                     {"name": "New Transactions", "value": get_yesterdays_asos_transactions()},
@@ -96,7 +98,7 @@ def teams_notification():
                 "markdown": False,
             },
             {
-                "activityTitle": "BPL ASOS Accounts since launch",
+                "activityTitle": "BPL ASOS stats since launch",
                 "facts": [
                     {"name": "Total Users", "value": get_all_asos_users_since_27th()},
                     {"name": "Total Transactions", "value": get_all_asos_transactions_since_27th()},

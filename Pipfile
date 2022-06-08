@@ -9,6 +9,7 @@ requests = "*"
 pydantic = "*"
 falcon = "*"
 psycopg2-binary = "*"
+arrow = "*"
 
 [dev-packages]
 flake8 = "*"
